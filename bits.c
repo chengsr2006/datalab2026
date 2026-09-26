@@ -19,7 +19,10 @@
  * Difficulty: 1
  */
 int bitAnd(int x, int y) {
-    return 2;
+    int aTemp,answer;
+    aTemp = ~x | ~y;
+    answer= ~aTemp;
+    return answer;
 }
 
 /*
@@ -30,7 +33,12 @@ int bitAnd(int x, int y) {
  *   Difficulty: 1
  */
 int bitXor(int x, int y) {
-    return 2;
+    int aOR,aAND, answer;
+    aOR = ~x & ~y;
+    aOR =~aOR;
+    aAND = x&y;
+    answer = aOR & ~aAND;
+    return answer;
 }
 
 /*
@@ -50,7 +58,16 @@ int bitXor(int x, int y) {
  *   1 if x and y have the same sign , 0 otherwise.
  */
 int samesign(int x, int y) {
-    return 2;
+    if (!x && !y){
+        return 1;
+    }else if(!x){
+        return 0;
+    }else if(!y){
+        return 0;
+    }
+    x >>= 31;
+    y >>= 31;
+    return !(x^y);
 }
 
 /*
@@ -63,7 +80,27 @@ int samesign(int x, int y) {
  *   Difficulty: 4
  */
 int logtwo(int v) {
-    return 2;
+    int testlength;
+    int number=0;
+    testlength = (v>>16) > 0;
+    testlength = testlength<<4;
+    number = number|testlength;
+    v = v>>testlength;
+    testlength = (v>>8) > 0;
+    testlength = testlength<<3;
+    number = number|testlength;
+    v = v>>testlength;
+    testlength = (v>>4) > 0;
+    testlength = testlength<<2;
+    number = number|testlength;
+    v = v>>testlength;
+    testlength = (v>>2) > 0;
+    testlength = testlength<<1;
+    number = number|testlength;
+    v = v>>testlength;
+    testlength = (v>>1) > 0;
+    number = number|testlength;
+    return number;
 }
 
 /*
@@ -76,7 +113,11 @@ int logtwo(int v) {
  *    Difficulty: 2
  */
 int byteSwap(int x, int n, int m) {
-    return 2;
+    int nShift = n<<3;
+    int mShift = m<<3;
+    int mask= (0xFF<<nShift)|(0xFF<<mShift);
+    int answer = (x & ~mask)|(((x>>nShift)&0xFF)<<mShift)|(((x>>mShift)&0xFF)<<nShift);
+    return answer;
 }
 
 /*
@@ -88,7 +129,15 @@ int byteSwap(int x, int n, int m) {
  *   Difficulty: 3
  */
 unsigned reverse(unsigned v) {
-    return 2;
+    unsigned reversed=0;
+    int n=32;
+    while(n){
+        reversed=reversed<<1;
+        reversed=reversed+(v&1);
+        v=v>>1;
+        n=n-1;
+    }
+    return reversed;
 }
 
 /*
@@ -100,7 +149,12 @@ unsigned reverse(unsigned v) {
  *   Difficulty: 3
  */
 int logicalShift(int x, int n) {
-    return 2;
+    int mask;
+    mask=((1<<31)>>n)<<1;
+    x=x>>n;
+    mask=~mask;
+    x=x&mask;
+    return x;
 }
 
 /*
@@ -112,7 +166,31 @@ int logicalShift(int x, int n) {
  *   Difficulty: 4
  */
 int leftBitCount(int x) {
-    return 2;
+    x=~x;
+    int num=0;
+    int verify=0;
+    verify=!!(x>>16);
+    verify=verify<<4;
+    num+=verify;
+    x = x >> verify;
+    verify=!!(x>>8);
+    verify=verify<<3;
+    num+=verify;
+    x = x >>verify;
+    verify=!!(x>>4);
+    verify=verify<<2;
+    num+=verify;
+    x = x >> verify;
+    verify=!!(x>>2);
+    verify=verify<<1;
+    num+=verify;
+    x = x >> verify;
+    verify=!!(x>>1);
+    num+=verify;
+    x = x >> verify;
+    verify = !!x;
+    num+=verify;    
+    return 32+(~num)+1;
 }
 
 /*
@@ -124,7 +202,21 @@ int leftBitCount(int x) {
  *   Difficulty: 4
  */
 unsigned float_i2f(int x) {
-    return 2;
+    unsigned s = x&0x80000000;
+    unsigned m;
+    unsigned e=31;
+    unsigned top;
+    if (!x) return 0;
+    m = x;
+    if (x < 0) m = ~x + 1;     
+    while (!(m>>e)) e = e-1;   
+    top = m << (31-e);
+    m = top >> 8;
+    unsigned remain = top&0xFF;
+    unsigned odd = m&1;
+    remain = remain + 0x7F + odd;
+    m = m + (remain>>8);
+    return s|(((e+127)<<23)+(m-0x800000));
 }
 
 /*
@@ -139,7 +231,23 @@ unsigned float_i2f(int x) {
  *   Difficulty: 4
  */
 unsigned floatScale2(unsigned uf) {
-    return 2;
+    unsigned e = uf & 0x7F800000;
+    unsigned s = uf & 0x80000000;
+    if ((uf&0x7FFFFFFF) == 0){
+        return uf;
+    }
+    if ((uf & 0x7F800000) == 0x7F800000){
+        return uf;
+    }
+    if (e == 0){
+        return s | ((uf&0x7FFFFFFF)<<1);
+    }
+    if (e == 0x7F000000){
+        return s | 0x7F800000;
+    }
+    /*unsigned addition= uf&0x007FFFFF;弃用*/
+    uf = uf + 0x00800000;
+    return uf;
 }
 
 /*
@@ -156,7 +264,28 @@ unsigned floatScale2(unsigned uf) {
  *   Difficulty: 3
  */
 int float64_f2i(unsigned uf1, unsigned uf2) {
-    return 2;
+    unsigned s = uf2>>31;    
+    unsigned e = (uf2>>20)&0x7FF;
+    unsigned m;
+    if (e > 1053){
+        return 0x80000000;
+    }
+    if (e < 1023){
+        return 0;
+    }
+    unsigned rightmove = 1075 - e; /*1075=1023+52*/
+    unsigned high= (uf2 & 0x000FFFFF) | 0x00100000;
+    unsigned low = uf1;
+    if (rightmove > 31){
+        m = high >> (rightmove - 32);
+    }else{
+        m = (high<< (32 - rightmove)) | (low >> rightmove);  /*这里high的高位不会被截去，high是32-12+1=21位，而rightmove至少为1075-1053=22,最多移10位*/
+    }
+    if(!!s){
+        m = ~m +1;
+    }
+    return m;
+    
 }
 
 /*
@@ -173,5 +302,15 @@ int float64_f2i(unsigned uf1, unsigned uf2) {
  *   Difficulty: 4
  */
 unsigned floatPower2(int x) {
-    return 2;
+    unsigned m;
+    if (x > 127){
+        m = 0x7F800000;
+    }else if(x > -127){
+        m = (x+127) << 23;
+    }else if(x > -150){
+        m = 1<<(149 + x);
+    }else{
+        m = 0;
+    }
+    return m;
 }
